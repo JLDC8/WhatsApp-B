@@ -15,7 +15,8 @@ interface Settings {
 }
 
 interface State {
-    view: 'list' | 'chat';
+    view: 'list' | 'chat' | 'edit_profile_pic';
+    previousView: 'list' | 'chat' | null;
     messages: Message[];
     settings: Settings;
     chatListImages: string[];
@@ -24,6 +25,7 @@ interface State {
     showChatMenu: boolean;
     showOneTimeInstructionModal: boolean;
     oneTimeInstruction: string | null;
+    tempProfilePic: string | null;
 }
 
 // --- CONSTANTS AND STATE ---
@@ -38,6 +40,7 @@ let chat: Chat;
 
 let state: State = {
     view: 'list',
+    previousView: null,
     messages: [],
     settings: {
         profilePic: 'https://i.ibb.co/3sSj9Q0/gemini-icon.png',
@@ -50,6 +53,7 @@ let state: State = {
     showChatMenu: false,
     showOneTimeInstructionModal: false,
     oneTimeInstruction: null,
+    tempProfilePic: null,
 };
 
 // --- STATE AND DATA MANAGEMENT ---
@@ -100,8 +104,10 @@ function render() {
     
     if (state.view === 'list') {
         appContainer.appendChild(renderChatListScreen());
-    } else {
+    } else if (state.view === 'chat') {
         appContainer.appendChild(renderChatScreen());
+    } else if (state.view === 'edit_profile_pic') {
+        appContainer.appendChild(renderEditProfilePicScreen());
     }
     
     if(state.showSettingsModal) {
@@ -331,8 +337,6 @@ function renderOneTimeInstructionModal() {
 function renderSettingsModal() {
     const modal = document.createElement('div');
     modal.className = 'modal-backdrop';
-    
-    const picInputValue = state.settings.profilePic.startsWith('data:image') ? 'Imagen local cargada' : state.settings.profilePic;
 
     modal.innerHTML = `
         <div class="modal-content">
@@ -343,12 +347,11 @@ function renderSettingsModal() {
             </div>
             <div class="form-group">
                 <label>Foto de perfil</label>
-                <div class="profile-pic-editor">
+                <div class="profile-pic-editor" id="edit-profile-pic-trigger" role="button" aria-label="Cambiar foto de perfil">
                     <img src="${state.settings.profilePic}" alt="Vista previa" class="profile-pic-preview">
-                    <div class="profile-pic-inputs">
-                        <input type="text" id="profile-pic-url" placeholder="O pega una URL aquí" value="${picInputValue}">
-                        <label for="profile-pic-upload" class="button-upload-small">SUBIR FOTO</label>
-                        <input type="file" id="profile-pic-upload" accept="image/*" style="display: none;">
+                    <div class="profile-pic-overlay">
+                        <span class="material-symbols-outlined">photo_camera</span>
+                        <span>CAMBIAR</span>
                     </div>
                 </div>
             </div>
@@ -384,8 +387,15 @@ function renderSettingsModal() {
     });
     
     modal.querySelector('#save-settings')!.addEventListener('click', handleSaveSettings);
+    
+    modal.querySelector('#edit-profile-pic-trigger')!.addEventListener('click', () => {
+        state.previousView = state.view as 'list' | 'chat';
+        state.view = 'edit_profile_pic';
+        state.showSettingsModal = false;
+        state.tempProfilePic = state.settings.profilePic;
+        render();
+    });
 
-    modal.querySelector('#profile-pic-upload')!.addEventListener('change', handleProfilePicUpload);
     modal.querySelector('#chat-list-images-upload')!.addEventListener('change', handleChatListImagesUpload);
     modal.querySelector('#chat-list-previews')!.addEventListener('click', (e) => {
         if ((e.target as HTMLElement).classList.contains('remove-preview-btn')) {
@@ -401,6 +411,66 @@ function renderSettingsModal() {
 
     return modal;
 }
+
+function renderEditProfilePicScreen() {
+    const screen = document.createElement('div');
+    screen.className = 'screen edit-profile-pic-screen';
+
+    screen.innerHTML = `
+        <div class="header">
+            <span class="material-symbols-outlined back-arrow" role="button" aria-label="Volver">arrow_back</span>
+            <h1>Foto de perfil</h1>
+            <button class="header-button" id="save-pic-btn">GUARDAR</button>
+        </div>
+        <div class="edit-pic-content">
+            <div class="edit-pic-preview-container">
+                <img src="${state.tempProfilePic || state.settings.profilePic}" alt="Vista previa de perfil" class="edit-pic-preview">
+            </div>
+            <div class="edit-pic-actions">
+                <div class="edit-pic-action-button" id="gallery-btn" role="button">
+                    <span class="material-symbols-outlined">photo_library</span>
+                    <span>Galería</span>
+                </div>
+                <div class="edit-pic-action-button" id="camera-btn" role="button">
+                    <span class="material-symbols-outlined">photo_camera</span>
+                    <span>Cámara</span>
+                </div>
+            </div>
+        </div>
+        <input type="file" id="profile-pic-upload-hidden" accept="image/*" style="display: none;">
+        <input type="file" id="profile-pic-capture-hidden" accept="image/*" capture="user" style="display: none;">
+    `;
+    
+    const returnToSettings = () => {
+        state.view = state.previousView || 'chat';
+        state.previousView = null;
+        state.showSettingsModal = true;
+        state.tempProfilePic = null;
+        render();
+    };
+
+    screen.querySelector('.back-arrow')!.addEventListener('click', returnToSettings);
+
+    screen.querySelector('#save-pic-btn')!.addEventListener('click', () => {
+        if (state.tempProfilePic) {
+            state.settings.profilePic = state.tempProfilePic;
+            saveState();
+        }
+        returnToSettings();
+    });
+    
+    const galleryInput = screen.querySelector('#profile-pic-upload-hidden') as HTMLInputElement;
+    const cameraInput = screen.querySelector('#profile-pic-capture-hidden') as HTMLInputElement;
+
+    screen.querySelector('#gallery-btn')!.addEventListener('click', () => galleryInput.click());
+    screen.querySelector('#camera-btn')!.addEventListener('click', () => cameraInput.click());
+
+    galleryInput.addEventListener('change', handleTempProfilePicUpload);
+    cameraInput.addEventListener('change', handleTempProfilePicUpload);
+
+    return screen;
+}
+
 
 // --- EVENT HANDLERS AND LOGIC ---
 async function handleSendMessage(event: Event) {
@@ -482,23 +552,18 @@ function handleSaveOneTimeInstruction() {
     render();
 }
 
-function handleProfilePicUpload(event: Event) {
+function handleTempProfilePicUpload(event: Event) {
     const target = event.target as HTMLInputElement;
     const file = target.files?.[0];
     if (!file) return;
 
     const reader = new FileReader();
     reader.onload = (e) => {
-        const newPicData = e.target?.result as string;
-        state.settings.profilePic = newPicData;
-        
-        // Update UI elements in the modal without a full re-render
-        const preview = document.querySelector('.profile-pic-preview') as HTMLImageElement;
-        const urlInput = document.getElementById('profile-pic-url') as HTMLInputElement;
-        if (preview) preview.src = newPicData;
-        if (urlInput) urlInput.value = 'Imagen local cargada';
+        state.tempProfilePic = e.target?.result as string;
+        render(); // Re-render the edit screen with the new preview
     };
     reader.readAsDataURL(file);
+    target.value = ''; // Reset input to allow selecting same file again
 }
 
 function handleChatListImagesUpload(event: Event) {
@@ -531,20 +596,14 @@ function handleRemoveChatListImage(event: Event) {
 
 function handleSaveSettings() {
     const nameInput = document.getElementById('ai-name') as HTMLInputElement;
-    const picInput = document.getElementById('profile-pic-url') as HTMLInputElement;
     const instructionInput = document.getElementById('system-instruction') as HTMLTextAreaElement;
 
     const newName = nameInput.value.trim();
     const newInstruction = instructionInput.value.trim();
-    
-    // If the input value is the placeholder for local image, we keep the existing base64 string in the state.
-    // Otherwise, we use the new value from the input (it might be a new URL).
-    const newPic = picInput.value !== 'Imagen local cargada' ? picInput.value.trim() : state.settings.profilePic;
 
     const needsChatReset = state.settings.systemInstruction !== newInstruction || state.settings.name !== newName;
 
     state.settings.name = newName;
-    state.settings.profilePic = newPic;
     state.settings.systemInstruction = newInstruction;
     
     state.showSettingsModal = false;

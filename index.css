@@ -519,39 +519,46 @@ body {
     color: white;
 }
 
-/* Profile Pic Editor */
+/* Profile Pic Editor in Modal */
 .profile-pic-editor {
-    display: flex;
-    align-items: center;
-    gap: 16px;
+    position: relative;
+    cursor: pointer;
+    width: 80px;
+    height: 80px;
+    align-self: center;
+    border-radius: 50%;
 }
 .profile-pic-preview {
-    width: 60px;
-    height: 60px;
+    width: 80px;
+    height: 80px;
     border-radius: 50%;
     object-fit: cover;
     border: 1px solid var(--border-light);
 }
-.profile-pic-inputs {
-    flex-grow: 1;
+.profile-pic-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    color: white;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%;
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
 }
-.button-upload-small {
-    padding: 8px 12px;
-    background-color: var(--accent-green);
-    color: white;
-    border-radius: 20px;
-    cursor: pointer;
-    text-align: center;
-    font-size: 12px;
-    font-weight: 500;
+.profile-pic-editor:hover .profile-pic-overlay {
+    opacity: 1;
 }
-.button-upload-small:hover {
-    background-color: #006855;
+.profile-pic-overlay span:last-child {
+    font-size: 10px;
+    font-weight: bold;
+    text-transform: uppercase;
 }
-
 
 /* Image Uploader Styles */
 .chat-list-image-uploader {
@@ -621,4 +628,76 @@ body {
 }
 .button-upload:hover {
     background-color: #006855;
+}
+
+/* Edit Profile Pic Screen */
+.edit-profile-pic-screen .header {
+    background-color: var(--background-light);
+}
+.edit-profile-pic-screen .header h1 {
+    color: var(--text-primary);
+    flex-grow: 1;
+    text-align: left;
+    margin-left: 24px;
+}
+.edit-profile-pic-screen .header .back-arrow {
+    color: var(--text-secondary);
+}
+.edit-profile-pic-screen .header-button {
+    background: none;
+    border: none;
+    color: var(--accent-green);
+    font-weight: 500;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 8px;
+}
+.edit-pic-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 40px;
+    padding: 20px;
+    background-color: var(--app-background);
+}
+.edit-pic-preview-container {
+    width: 200px;
+    height: 200px;
+}
+.edit-pic-preview {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid var(--border-light);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+.edit-pic-actions {
+    display: flex;
+    gap: 40px;
+}
+.edit-pic-action-button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    color: var(--text-secondary);
+    transition: color 0.2s;
+}
+.edit-pic-action-button .material-symbols-outlined {
+    font-size: 28px;
+    padding: 15px;
+    border: 1px solid var(--border-light);
+    border-radius: 50%;
+    background-color: var(--background-light);
+    transition: border-color 0.2s;
+}
+.edit-pic-action-button:hover {
+    color: var(--accent-green);
+}
+.edit-pic-action-button:hover .material-symbols-outlined {
+    border-color: var(--accent-green);
 }

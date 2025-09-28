@@ -1,5 +1,7 @@
 {
   "name": "WhatsApp B",
   "description": "An empty app",
-  "requestFramePermissions": []
+  "requestFramePermissions": [
+    "camera"
+  ]
 }
