@@ -1,0 +1,23 @@
+{
+  "name": "WhatsApp B",
+  "short_name": "WhatsAppB",
+  "description": "Chat con Gemini",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#f0f2f5",
+  "theme_color": "#008069",
+  "icons": [
+    {
+      "src": "https://i.ibb.co/3sSj9Q0/gemini-icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://i.ibb.co/3sSj9Q0/gemini-icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
