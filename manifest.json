@@ -3,7 +3,7 @@
   "short_name": "WhatsAppB",
   "description": "Chat con Gemini",
   "start_url": ".",
-  "display": "standalone",
+  "display": "fullscreen",
   "background_color": "#f0f2f5",
   "theme_color": "#008069",
   "icons": [
